@@ -1,7 +1,5 @@
 Flask>=3.0,<4
 pycryptodome>=3.20,<4
 pytest>=8.0
-
-# Tùy chọn (bỏ comment nếu làm phần mở rộng):
-# matplotlib>=3.8      # vẽ biểu đồ benchmark
-# cryptography>=42.0   # phát hành chứng thư X.509 thật + openssl verify
+matplotlib>=3.8      # vẽ biểu đồ benchmark
+cryptography>=42.0   # phát hành chứng thư X.509 thật + openssl verify
