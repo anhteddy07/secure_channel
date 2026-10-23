@@ -28,8 +28,8 @@ Chạy kiểm thử: `pytest tests/ -v`  ·  Chạy đo lường độc lập: `
 | `modules/key_exchange.py` | Người 4 | DH số nhỏ, ECDH P-256, DH-2048, HKDF |
 | `modules/encryption.py` | Người 4 | AES-256-GCM, ChaCha20-Poly1305 |
 | `modules/mitm.py` | Người 5 | Mô phỏng MITM (không xác thực / có chữ ký + chứng thư) + nhật ký |
-| `benchmarks/run_benchmarks.py` | Cần phân công | Đo ≥ 20 lần: sinh khóa/ký/kiểm tra, ECDH vs DH, AES-GCM vs ChaCha20 |
-| `templates/`, `static/` | Cần phân công | Giao diện HTML/JS (cần `templates/index.html`) |
+| `benchmarks/run_benchmarks.py` | Đã có sẵn | Đo ≥ 20 lần bằng pycryptodome trực tiếp (độc lập với module khác): sinh khóa/ký/kiểm tra, ECDH vs DH-2048, AES-GCM vs ChaCha20. Chạy riêng: `python -m benchmarks.run_benchmarks --runs 20` (khoảng 40 giây) |
+| `templates/index.html`, `static/style.css`, `static/app.js` | Đã có sẵn | Giao diện 7 tab, chỉ gọi API của `app.py`; ai thêm chức năng thì thêm tab/nút tương ứng |
 | `tests/` | Mỗi người test module của mình | Dùng bộ dữ liệu ở cuối file này |
 
 Mỗi thư mục `modules/`, `benchmarks/`, `tests/` cần một file `__init__.py` (có thể rỗng).

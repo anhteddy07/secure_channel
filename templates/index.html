@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kênh liên lạc an toàn</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app">
+  <nav class="side" aria-label="Chức năng">
+    <div class="brand"><strong>Kênh liên lạc an toàn</strong><span>Alice nói chuyện với Bob, Eve ở giữa</span></div>
+    <button data-tab="keys" class="on">Khóa và chứng thư</button>
+    <button data-tab="hash">Băm và HMAC</button>
+    <button data-tab="sign">Ký số</button>
+    <button data-tab="pki">Kiểm tra chứng thư</button>
+    <button data-tab="enc">Trao khóa và mã hóa</button>
+    <button data-tab="mitm">Tấn công người ở giữa</button>
+    <button data-tab="bench">Đo lường</button>
+    <p id="status" class="muted small"></p>
+  </nav>
+
+  <main>
+    <!-- B.2.1 Sinh khóa -->
+    <section id="tab-keys" class="tab on">
+      <h2>Khóa và chứng thư</h2>
+      <p class="lead">Tạo cặp khóa cho CA, Alice và Bob rồi để CA cấp chứng thư. Giao diện chỉ hiển thị khóa công khai và dấu vân tay (16 byte đầu của SHA-256); khóa riêng chỉ nằm trong bộ nhớ server.</p>
+      <div class="panel">
+        <div class="row">
+          <label>Thuật toán chữ ký<select id="demo-algo" class="algo"></select></label>
+          <button id="btn-demo" class="primary">Thiết lập nhanh cả ba</button>
+          <button id="btn-ca">Khởi tạo CA</button>
+          <button id="btn-issue-a">Cấp chứng thư cho Alice</button>
+          <button id="btn-issue-b">Cấp chứng thư cho Bob</button>
+        </div>
+        <p class="muted small">Thiết lập nhanh sinh khóa cho CA, Alice, Bob, khởi tạo CA và cấp chứng thư cho Alice và Bob. Muốn chọn thuật toán riêng cho từng người, dùng nút Sinh khóa trong từng thẻ.</p>
+      </div>
+      <div id="entities" class="ents"></div>
+    </section>
+
+    <!-- B.2.2 Hàm băm, HMAC, hiệu ứng thác -->
+    <section id="tab-hash" class="tab">
+      <h2>Băm, HMAC và hiệu ứng thác</h2>
+      <div class="panel">
+        <label>Văn bản (tối đa 200 ký tự)<textarea id="h-text" maxlength="200" rows="2">abc</textarea></label>
+        <label>Hoặc tải một file<input type="file" id="h-file"></label>
+        <button id="h-go" class="primary">Tính SHA-256, SHA-1 và MD5</button>
+        <div id="h-out" class="out"></div>
+      </div>
+      <div class="panel">
+        <h3>Hiệu ứng thác</h3>
+        <p class="muted small">Đổi một ký tự rồi đếm số bit của SHA-256 thay đổi. Kỳ vọng khoảng 128 trên 256 bit.</p>
+        <label>Văn bản thứ hai (để trống để tự tăng ký tự cuối lên 1, ví dụ abc thành abd)<input id="h-textb" maxlength="200"></label>
+        <button id="h-av">So sánh số bit khác nhau</button>
+        <div id="h-out2" class="out"></div>
+      </div>
+      <div class="panel">
+        <h3>HMAC-SHA256</h3>
+        <p class="muted small">Dùng văn bản ở khung đầu tiên. Nhập thẻ cần kiểm tra để so sánh bằng hmac.compare_digest.</p>
+        <div class="row">
+          <label>Khóa<input id="h-key" value="key"></label>
+          <label class="grow">Thẻ cần kiểm tra (hex, không bắt buộc)<input id="h-tag"></label>
+        </div>
+        <button id="h-hmac">Tính HMAC và so sánh</button>
+        <div id="h-out3" class="out"></div>
+      </div>
+      <div class="panel">
+        <h3>Tốc độ băm file 10 MB</h3>
+        <button id="h-bench">Đo thời gian</button>
+        <div id="h-out4" class="out"></div>
+      </div>
+    </section>
+
+    <!-- B.2.3 Ký số -->
+    <section id="tab-sign" class="tab">
+      <h2>Ký số và xác minh</h2>
+      <p class="lead">Băm rồi ký bằng khóa riêng của người gửi, xác minh bằng khóa công khai. Thử sửa thông điệp hoặc thay chữ ký để thấy xác minh thất bại.</p>
+      <div class="panel">
+        <label>Thông điệp<textarea id="s-text" maxlength="200" rows="2">Alice chuyển cho Bob 100.000 đồng</textarea></label>
+        <label>Hoặc tải một file<input type="file" id="s-file"></label>
+        <div class="row">
+          <label>Người ký<select id="s-signer"><option>Alice</option><option>Bob</option><option>CA</option></select></label>
+          <button id="s-sign" class="primary">Ký thông điệp</button>
+        </div>
+        <div id="s-out" class="out"></div>
+      </div>
+      <div class="panel">
+        <h3>Xác minh</h3>
+        <div class="row">
+          <label>Dùng khóa công khai của<select id="s-vsigner"><option>Alice</option><option>Bob</option><option>CA</option></select></label>
+        </div>
+        <div class="row">
+          <button class="vbtn" data-mode="normal">Xác minh nguyên bản</button>
+          <button class="vbtn danger" data-mode="tamper_message">Sửa 1 byte của thông điệp</button>
+          <button class="vbtn danger" data-mode="swap_signature">Thay bằng chữ ký của người khác</button>
+          <button class="vbtn danger" data-mode="wrong_algo">Xác minh bằng thuật toán sai</button>
+        </div>
+        <div id="s-out2" class="out"></div>
+      </div>
+    </section>
+
+    <!-- B.2.4 Mini-PKI -->
+    <section id="tab-pki" class="tab">
+      <h2>Kiểm tra chứng thư</h2>
+      <p class="lead">CA ký chứng thư cho Alice và Bob. Bộ kiểm tra phải phát hiện bốn lỗi: chữ ký CA sai, hết hạn, sai tên chủ thể và đã bị thu hồi.</p>
+      <div class="panel">
+        <div class="row">
+          <label>Chủ thể<select id="p-subject"><option>Alice</option><option>Bob</option></select></label>
+          <label>Hiệu lực (ngày)<input id="p-days" type="number" value="365"></label>
+          <button id="p-issue">Cấp chứng thư mới</button>
+          <button id="p-scen" class="primary">Chạy bốn tình huống lỗi</button>
+        </div>
+        <p class="muted small">Bốn tình huống tự cấp, sửa, thu hồi chứng thư rồi cấp lại bản hợp lệ để các tab khác vẫn dùng được.</p>
+        <div id="p-out" class="out"></div>
+      </div>
+      <div class="panel">
+        <h3>Tự sửa chứng thư và kiểm tra</h3>
+        <label>Chứng thư (JSON, có thể sửa tay)<textarea id="p-json" rows="12" spellcheck="false"></textarea></label>
+        <div class="row">
+          <label>Tên chủ thể mong đợi<select id="p-exp"><option>Alice</option><option>Bob</option></select></label>
+          <button id="p-verify">Kiểm tra nội dung trong khung</button>
+        </div>
+        <div id="p-out2" class="out"></div>
+      </div>
+    </section>
+
+    <!-- B.2.5 Trao khóa + mã hóa lai -->
+    <section id="tab-enc" class="tab">
+      <h2>Trao khóa và mã hóa có xác thực</h2>
+      <div class="panel">
+        <h3>Diffie–Hellman số nhỏ</h3>
+        <p class="muted small">Mẫu trên lớp: p = 23, g = 5, a = 6, b = 15 cho A = 8, B = 19, K = 2.</p>
+        <div class="row">
+          <label>p<input id="d-p" type="number" value="23"></label>
+          <label>g<input id="d-g" type="number" value="5"></label>
+          <label>a (riêng của Alice)<input id="d-a" type="number" value="6"></label>
+          <label>b (riêng của Bob)<input id="d-b" type="number" value="15"></label>
+          <button id="d-go">Tính</button>
+        </div>
+        <div id="d-out" class="out"></div>
+      </div>
+      <div class="panel">
+        <h3>Alice gửi tin cho Bob</h3>
+        <p class="muted small">Khóa chung đi qua HKDF-SHA256 thành khóa phiên 256 bit. Tiêu đề (AAD) gồm người gửi, người nhận và số thứ tự.</p>
+        <label>Tin nhắn (tối đa 200 ký tự)<textarea id="e-text" maxlength="200" rows="2">Hẹn 8 giờ tối nay nhé</textarea></label>
+        <div class="row">
+          <label>Trao khóa<select id="e-kex"><option value="ecdh">ECDH P-256</option><option value="dh2048">DH-2048 (RFC 3526)</option></select></label>
+          <label>Mã hóa<select id="e-aead"><option>AES-256-GCM</option><option>ChaCha20-Poly1305</option></select></label>
+        </div>
+        <div class="row">
+          <button class="sbtn primary" data-t="none">Gửi bình thường</button>
+          <button class="sbtn danger" data-t="flip_ciphertext">Sửa 1 bit của bản mã</button>
+          <button class="sbtn danger" data-t="flip_aad">Sửa 1 bit của AAD</button>
+          <button id="e-cmp">So sánh hai thuật toán AEAD</button>
+        </div>
+        <div id="e-out" class="out"></div>
+      </div>
+    </section>
+
+    <!-- B.2.6 MITM -->
+    <section id="tab-mitm" class="tab">
+      <h2>Tấn công người ở giữa</h2>
+      <p class="lead">Eve nằm giữa Alice và Bob, đọc, sửa và thay thế mọi gói tin. Chạy hai chế độ để so sánh: trao khóa không xác thực và trao khóa có chữ ký kèm chứng thư.</p>
+      <div id="chan" class="channel" data-state="idle">
+        <div class="node a">Alice<small>gửi tin</small></div><div class="link"></div>
+        <div class="node e">Eve<small id="eve-note">chưa chạy</small></div><div class="link"></div>
+        <div class="node b">Bob<small>nhận tin</small></div>
+      </div>
+      <div class="panel">
+        <label>Tin nhắn của Alice<input id="m-msg" maxlength="200" value="Chuyển khoản cho Bob 100.000 đồng"></label>
+        <label class="check"><input type="checkbox" id="m-eve">Eve có chứng thư hợp lệ của chính Eve (chỉ áp dụng cho chế độ có xác thực)</label>
+        <div class="row">
+          <button id="m-un" class="danger">Chế độ 1: DH không xác thực</button>
+          <button id="m-au" class="primary">Chế độ 2: DH có chữ ký và chứng thư</button>
+        </div>
+        <p class="muted small">Chế độ 2 cần Alice và Bob đã có chứng thư (dùng Thiết lập nhanh ở tab Khóa và chứng thư).</p>
+        <div id="m-out" class="out"></div>
+      </div>
+    </section>
+
+    <!-- B.2.7 Đo lường -->
+    <section id="tab-bench" class="tab">
+      <h2>Đo lường và so sánh</h2>
+      <p class="lead">Trung bình của nhiều lần đo cho chữ ký, trao khóa và mã hóa có xác thực. Sinh khóa RSA-3072 khá chậm nên đo đủ 20 lần mất khoảng nửa phút đến một phút.</p>
+      <div class="panel">
+        <div class="row">
+          <label>Số lần đo (tối thiểu 20)<input id="b-runs" type="number" min="20" value="20"></label>
+          <button id="b-go" class="primary">Chạy đo lường</button>
+        </div>
+        <div id="b-out" class="out"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
